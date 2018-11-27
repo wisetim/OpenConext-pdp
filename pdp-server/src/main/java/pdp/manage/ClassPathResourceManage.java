@@ -35,7 +35,7 @@ public class ClassPathResourceManage implements Manage {
         newEntityMetaData.put(SP_ENTITY_ID, parseEntities(getSpResource()));
         this.entityMetaData = newEntityMetaData;
         LOG.debug("Initialized Manage Resources. Number of IDPs {}. Number of SPs {}", entityMetaData.get(IDP_ENTITY_ID)
-            .size(), entityMetaData.get(SP_ENTITY_ID).size());
+                .size(), entityMetaData.get(SP_ENTITY_ID).size());
     }
 
     private Resource getIdpResource() {
@@ -62,7 +62,7 @@ public class ClassPathResourceManage implements Manage {
         String institutionId = idp.getInstitutionId();
         if (StringUtils.hasText(institutionId)) {
             return identityProviders().stream().filter(md -> institutionId.equals(md.getInstitutionId())).collect
-                (toSet());
+                    (toSet());
         } else {
             return Sets.newHashSet(idp);
         }
@@ -87,9 +87,9 @@ public class ClassPathResourceManage implements Manage {
     }
 
     private Optional<EntityMetaData> entityMetaDataOptionalByEntityId(String entityId, List<EntityMetaData>
-        entityMetaDatas) {
+            entityMetaDatas) {
         return entityMetaDatas.stream().filter(sp -> sp.getEntityId().equals(entityId)).collect
-            (singletonOptionalCollector());
+                (singletonOptionalCollector());
     }
 
     @Override
@@ -106,10 +106,22 @@ public class ClassPathResourceManage implements Manage {
     public void enrichPdPPolicyDefinition(PdpPolicyDefinition pd) {
         List<String> entityIds = pd.getIdentityProviderIds();
         List<EntityMetaData> metaDataList = identityProviders().stream().filter(idp -> entityIds.contains(idp.getEntityId
-            ())).collect(toList());
+                ())).collect(toList());
 
         pd.setIdentityProviderNames(metaDataList.stream().map(EntityMetaData::getNameEn).collect(toList()));
         pd.setIdentityProviderNamesNl(metaDataList.stream().map(EntityMetaData::getNameNl).collect(toList()));
+    }
+
+    @Override
+    public List<EntityMetaData> serviceProvidersByEntityId(List<String> entityIds) {
+        return entityMetaData.get(SP_ENTITY_ID).stream()
+                .filter(entityMetaData -> entityIds.contains(entityMetaData.getEntityId())).collect(toList());
+    }
+
+    @Override
+    public List<EntityMetaData> identityProvidersByEntityId(List<String> entityIds) {
+        return entityMetaData.get(IDP_ENTITY_ID).stream()
+                .filter(entityMetaData -> entityIds.contains(entityMetaData.getEntityId())).collect(toList());
     }
 
     /**

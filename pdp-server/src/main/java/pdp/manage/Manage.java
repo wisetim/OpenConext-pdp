@@ -41,6 +41,10 @@ public interface Manage extends JsonMapper {
 
     void enrichPdPPolicyDefinition(PdpPolicyDefinition pd);
 
+    List<EntityMetaData> serviceProvidersByEntityId(List<String> entityIds);
+
+    List<EntityMetaData> identityProvidersByEntityId(List<String> entityIds);
+
     @SuppressWarnings("unchecked")
     default List<EntityMetaData> parseEntities(Resource resource) {
         try {

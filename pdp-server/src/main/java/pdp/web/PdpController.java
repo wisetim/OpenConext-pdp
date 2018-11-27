@@ -75,6 +75,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -221,10 +222,21 @@ public class PdpController implements JsonMapper, IPAddressProvider{
 
     @RequestMapping(method = GET, value = {"/internal/policies", "/protected/policies"})
     public List<PdpPolicyDefinition> policyDefinitions() {
-        Stream<PdpPolicy> stream = pdpPolicyRepository.findAll().stream();
+        List<PdpPolicy> pdpPolicyStream = pdpPolicyRepository.findAll();
+        List<PdpPolicyDefinition> definitions = pdpPolicyStream.stream()
+                .map(policy -> pdpPolicyDefinitionParser.parse(policy)).collect(toList());
+        Set<List<String>> identityProvidersEntityIds = definitions.stream().map(definition -> definition.getIdentityProviderIds()).collect(Collectors.toSet());
+        Set<List<String>> serviceProvidersEntityIds = definitions.stream().map(definition -> definition.getIdentityProviderIds()).collect(Collectors.toSet());
+
+        List<EntityMetaData>
+
         List<PdpPolicyDefinition> policies = stream
-            .map(policy -> policyMissingServiceProviderValidator.addEntityMetaData(
-                addAccessRules(policy, pdpPolicyDefinitionParser.parse(policy)))).collect(toList());
+            .map(policy -> {
+                PdpPolicyDefinition pdpPolicyDefinition = pdpPolicyDefinitionParser.parse(policy);
+                PdpPolicyDefinition enrichedPolicyDefinition = addAccessRules(policy, pdpPolicyDefinition);
+                return policyMissingServiceProviderValidator.addEntityMetaData(
+                        enrichedPolicyDefinition);
+            }).collect(toList());
 
         policies = policies.stream().filter(policy -> !policy.isServiceProviderInvalidOrMissing()).collect(toList());
 
